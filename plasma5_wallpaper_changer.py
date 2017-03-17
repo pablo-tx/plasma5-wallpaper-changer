@@ -60,7 +60,6 @@ def change_wallpapers():
 
     bus = dbus.SessionBus()
     plasma = dbus.Interface(bus.get_object('org.kde.plasmashell', '/PlasmaShell'), dbus_interface='org.kde.PlasmaShell')
-
     plasma.evaluateScript(js_wallpaper_1 % image_1)
     plasma.evaluateScript(js_wallpaper_2 % image_2)
 
