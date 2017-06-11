@@ -7,7 +7,21 @@ from PIL import Image
 from io import BytesIO
 import dbus
 import os
+#. ~/.dbus/session-bus/$(cat /var/lib/dbus/machine-id)-0 && export DBUS_SESSION_BUS_ADDRESS DBUS_SESSION_BUS_PID
 
+with open("/var/lib/dbus/machine-id", "r") as machine_id:
+    id = machine_id.readline().strip()
+
+with open("/home/"+os.getlogin()+"/.dbus/session-bus/"+id+"-0", "r") as dbus_info:
+    for line in dbus_info:
+        if "DBUS_SESSION_BUS_ADDRESS=" in line:
+            address = line.split("DBUS_SESSION_BUS_ADDRESS=")[1].strip()
+        if "DBUS_SESSION_BUS_PID=" in line:
+            pid = line.split("DBUS_SESSION_BUS_PID=")[1].strip()
+
+if not pid or not address:
+    print("DBUS FILE NOT FOUND")
+    os.close(1)
 
 def regen_dir(path):
     if os.path.exists(path):
@@ -25,7 +39,7 @@ def get_wallpapers():
 
     rgxp = re.compile(r'wallpaper/([0-9]*)\"')
     wall_codes = rgxp.findall(r.text)
-    wall_number = randint(0, 22)
+    wall_number = randint(0, 50)
     r_1 = requests.get('https://wallpapers.wallhaven.cc/wallpapers/full/wallhaven-' + str(wall_codes[wall_number]) + '.jpg')
     r_2 = requests.get('https://wallpapers.wallhaven.cc/wallpapers/full/wallhaven-' + str(wall_codes[wall_number+1]) + '.jpg')
 
@@ -42,6 +56,8 @@ def get_wallpapers():
 
 
 def change_wallpapers():
+    os.environ['DBUS_SESSION_BUS_ADDRESS'] = address
+    os.environ['DBUS_SESSION_BUS_PID'] = pid
     js_wallpaper_1 = '''
     var allDesktops = desktops();
     d = allDesktops[0];
@@ -52,7 +68,7 @@ def change_wallpapers():
 
     js_wallpaper_2 = '''
     var allDesktops = desktops();
-    d = allDesktops[1];
+    d = allDesktops[2];
     d.wallpaperPlugin = "org.kde.image";
     d.currentConfigGroup = Array("Wallpaper", "org.kde.image", "General");
     d.writeConfig("Image", "file://%s")
